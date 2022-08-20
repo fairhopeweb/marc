@@ -114,16 +114,31 @@ var defaultCSS string
 //go:embed github-markdown.tmpl
 var defaultHTML string
 
+var defaultTmpl *template.Template
+
+func init() {
+    tmplText := strings.Replace(defaultHTML, "STYLE_PLACEHOLDER", defaultCSS, 1)
+    tmplBase := template.New("default").Funcs(funcs)
+    defaultTmpl = template.Must(tmplBase.Parse(tmplText))
+}
+
 func readTmpl(siteDir string) *template.Template {
-    tmplBase := template.New("base").Funcs(funcs)
+    tmplBase := template.New("base.tmpl").Funcs(funcs)
 	tmplPath := filepath.Join(siteDir, "base.tmpl")
-	if tmplText, err := os.ReadFile(tmplPath); err == nil {
-        if tmpl, err := tmplBase.Parse(string(tmplText)); err == nil {
-            return tmpl
+	tmplText, err := os.ReadFile(tmplPath)
+
+    if err != nil {
+        if os.IsNotExist(err) {
+            return defaultTmpl
         }
+        log.Fatal("failed to read ", err)
     }
-    text := strings.Replace(defaultHTML, "STYLE_PLACEHOLDER", defaultCSS, 1)
-    return template.Must(tmplBase.Parse(text))
+
+    tmpl, err := tmplBase.Parse(string(tmplText))
+    if err != nil {
+        log.Fatal("failed to parse ", err)
+    }
+    return tmpl
 }
 
 func main() {
