@@ -1,4 +1,4 @@
-module sgen
+module github.com/nkanaev/marc
 
 go 1.18
 
