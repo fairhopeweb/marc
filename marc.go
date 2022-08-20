@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+    _ "embed"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
@@ -107,6 +108,24 @@ func readPage(abspath string, siteDir string) Page {
 	return page
 }
 
+
+//go:embed github-markdown.css
+var defaultCSS string
+//go:embed github-markdown.tmpl
+var defaultHTML string
+
+func readTmpl(siteDir string) *template.Template {
+    tmplBase := template.New("base").Funcs(funcs)
+	tmplPath := filepath.Join(siteDir, "base.tmpl")
+	if tmplText, err := os.ReadFile(tmplPath); err == nil {
+        if tmpl, err := tmplBase.Parse(string(tmplText)); err == nil {
+            return tmpl
+        }
+    }
+    text := strings.Replace(defaultHTML, "STYLE_PLACEHOLDER", defaultCSS, 1)
+    return template.Must(tmplBase.Parse(text))
+}
+
 func main() {
 	log.SetFlags(0)
 	if len(os.Args) != 2 {
@@ -115,16 +134,7 @@ func main() {
 	}
 
 	siteDir := os.Args[1]
-
-	tmplPath := filepath.Join(siteDir, "base.tmpl")
-	tmplText, err := os.ReadFile(tmplPath)
-	if err != nil {
-		log.Fatal("failed to read base.tmpl:", err)
-	}
-	baseTmpl, err := template.New(tmplPath).Funcs(funcs).Parse(string(tmplText))
-	if err != nil {
-		log.Fatal("failed to parse base.tmpl:", err)
-	}
+    baseTmpl := readTmpl(siteDir)
 
 	pages := make(Pages, 0)
 	filepath.WalkDir(siteDir, func(path string, d fs.DirEntry, err error) error {

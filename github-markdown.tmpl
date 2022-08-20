@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Page.RelPath}}</title>
+    <style>
+body {margin: 0; padding: 0;}
+article {
+    max-width: 60rem;
+    padding: 1rem;
+    margin: 0 auto !important;
+}
+
+STYLE_PLACEHOLDER
+    </style>
+</head>
+<body>
+    <article class="markdown-body">
+        {{ .Page.HTML }}
+    </article>
+</body>
+</html>
